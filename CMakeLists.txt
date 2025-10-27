@@ -55,7 +55,7 @@ target_compile_options(sum_direct PRIVATE -Wall -pedantic -march=native)
 
 add_executable (sum_vector sum_vector.cpp)
 target_link_libraries(sum_vector PRIVATE benchmark Threads::Threads)
-target_compile_features(sum_vector PRIVATE cxx_std_1img,
+target_compile_features(sum_vector PRIVATE cxx_std_1img,)
 target_compile_options(sum_vector PRIVATE -Wall -pedantic -march=native)
 
 add_executable (sum_indirect sum_indirect.cpp)
