@@ -47,7 +47,7 @@ int main(int argc, char** argv)
       auto end_time = std::chrono::high_resolution_clock::now();
       std::chrono::duration<double> elapsed_time = end_time - start_time;
 
-      printf(" Sum result = %lf \n",t);
+      printf(" Sum result = %lld \n",t);
 
    } // end loop over problem sizes
 
