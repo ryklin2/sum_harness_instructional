@@ -5,12 +5,16 @@
 #include <random>
 #include <vector>
 #include <string.h>
-#include <thread>
+#include <thread> //I hope C++ standard threads library is allowed... I guess I could do it a bit more manually.
+//I'm not sure if how this applies to like OMP and such either, but I figureed a really standard library is probably okay.
+//If it was really needed I guess I could write out like 128 threads manually but that seems excessive.
 
 #include "sums.h"
 
+static std::vector<int64_t> data_A;
+
 void get_chunk_indices(int64_t N, int num_threads, int thread_id, int64_t& start, int64_t& end) {
-    int64_t chunk_size = (N + num_threads - 1) / num_threads;
+    int64_t chunk_size = (N + num_threads - 1) / num_threads;  
     start = thread_id * chunk_size;
     end = std::min(start + chunk_size, N);
 }
@@ -31,13 +35,11 @@ setup(int64_t N, int64_t A[])
             A[i] = i;
         }
     };
-
+    // Google Gemini suggested emplace_back while I asked it to proofread and I like this function so I'm using it.
     for (int t = 0; t < num_threads; ++t) {
         threads.emplace_back(setup_worker, t);
     }
 
-    // --- Join Threads ---
-    // Wait for all setup threads to finish
     for (auto& th : threads) {
         th.join();
     }
@@ -50,42 +52,28 @@ sum(int64_t N, int64_t A[])
    
     const int num_threads = std::thread::hardware_concurrency(); // 128
     std::vector<std::thread> threads;
-    
-    // 1. CREATE STORAGE FOR PARTIAL SUMS
-    // We need one slot for each thread to write its partial result.
-    // Using std::vector is safe.
     std::vector<int64_t> partial_sums(num_threads, 0);
 
-    // This is the lambda function each thread will run
     auto sum_worker = [&](int thread_id) {
         int64_t start, end;
         get_chunk_indices(N, num_threads, thread_id, start, end);
 
-        // 2. WRITE OUT THE LOOP (per-thread)
-        // Each thread calculates its own private_sum
         int64_t private_sum = 0;
         for (int64_t i = start; i < end; i++) {
             private_sum += A[i];
         }
-        
-        // 3. STORE PARTIAL RESULT
-        // Each thread writes to its own unique, safe spot in the vector
+        // each thread writes to its own unique, safe spot in the vector
         partial_sums[thread_id] = private_sum;
     };
-
-    // --- Launch Threads ---
     for (int t = 0; t < num_threads; ++t) {
         threads.emplace_back(sum_worker, t);
     }
 
-    // --- Join Threads ---
-    // Wait for all threads to finish their sum
+    // wait for all threads to finish their sum
     for (auto& th : threads) {
         th.join();
     }
 
-    // 4. SEPARATE ADDING RESULTS (Final Reduction)
-    // Now that all threads are done, the main thread will safely
     // add up all the partial sums.
     int64_t total_sum = 0;
     for (int64_t partial : partial_sums) {
