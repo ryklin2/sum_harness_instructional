@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h> // For lrand48() and srand48()
 #include <thread>   // Use C++ Standard Threads
+// could also be using random and ctime from cpp instead
 
 #include "sums.h"
 
